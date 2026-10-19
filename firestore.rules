@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /prayers/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.venue is string && request.resource.data.venue.size() < 81
+        && request.resource.data.suburb is string && request.resource.data.suburb.size() < 51
+        && request.resource.data.state in ['NSW','VIC','QLD','ACT','SA','NT','WA','TAS']
+        && request.resource.data.date is string && request.resource.data.time is string;
+      // Community edits: anyone can correct date/time/notes, or confirm the current time (+1).
+      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date','time','notes','updatedAt','confirms'])
+          && request.resource.data.date is string && request.resource.data.time is string
+          && request.resource.data.notes.size() < 201 && request.resource.data.confirms == 0)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirms','lastConfirmed'])
+          && request.resource.data.confirms == resource.data.get('confirms',0) + 1);
+      allow delete: if false;   // remove spam in the Firebase Console
+    }
+    match /subscribers/{token} {
+      allow create, update: if request.resource.data.places is list && request.resource.data.places.size() <= 50;
+      allow delete: if true;   // lets a device turn its own notifications off
+      allow read: if false;
+    }
+  }
+}

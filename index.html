@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eid Prayer">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Eid Prayer Finder Australia</title>
+<style>
+:root{--bg:#f6f4ee;--card:#fff;--text:#1d2b25;--mute:#5f6d66;--accent:#0f6b4f;--soft:#e3f1ea;--line:#dcd8cc;--onacc:#fff;--warn:#fff6dc}
+@media (prefers-color-scheme:dark){:root{--bg:#121a16;--card:#1b2620;--text:#e8efe9;--mute:#9db0a5;--accent:#4cc79a;--soft:#22372d;--line:#2d3b33;--onacc:#0b1f17;--warn:#2e2a17}}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:680px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 2px}.sub{color:var(--mute);margin:0 0 12px}
+input,select,textarea,button{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}
+button{background:var(--accent);color:var(--onacc);border:0;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.tabs,.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tabs{margin:10px 0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.chip{width:auto;flex:none;padding:6px 14px;border-radius:99px;background:var(--card);color:var(--text);border:1px solid var(--line);font-weight:500}
+.chip.on{background:var(--accent);color:var(--onacc);border-color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:8px 0}
+.card h3{margin:0 0 4px;font-size:1.05rem}
+.day{font-weight:700;margin:18px 0 2px;color:var(--mute);font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+.when{display:inline-block;background:var(--soft);color:var(--accent);font-weight:700;border-radius:8px;padding:2px 8px;margin:2px 0 6px}
+.meta{color:var(--mute);font-size:.92rem}
+.acts{display:grid;grid-template-columns:1fr 1fr 56px;gap:8px}
+.acts a,.acts button,.acts2 button{text-align:center;text-decoration:none;font-size:.92rem;padding:8px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);background:transparent;font-weight:600}
+.acts{margin-top:10px}.acts2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.acts2 button{font-size:.92rem}.acts button.fav{font-size:1.3rem;line-height:1;padding:6px}
+#bell.on{background:#0b5d3b;color:#fff;border:1px solid #0b5d3b}
+.acts button.fav.on{color:#e11d48;border-color:#e11d48;background:rgba(225,29,72,.1)}.fav.on .h{color:#e11d48}
+.trust{font-size:.82rem;color:var(--mute);margin-top:6px}
+.badge{font-size:.75rem;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:500}
+label{display:block;font-size:.85rem;color:var(--mute);margin:8px 0 3px}
+.note{font-size:.85rem;color:var(--mute);background:var(--warn);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:10px 0}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0}.bar button{width:auto;padding:6px 12px;font-size:.9rem}
+#form{display:none}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--text);max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+<main>
+  <h1>🌙 Eid Prayer Finder</h1>
+  <p class="sub">Find where and when Eid prayer is happening near you, anywhere in Australia.</p>
+  <div class="note"><strong>Community-submitted.</strong> Please contact the organiser to confirm date, time and location. Weather may affect outdoor venues. Bring your own prayer mat.</div>
+  <div id="demo" class="note" style="display:none">Demo mode: Firebase isn’t configured yet, so data stays on this device. See README.md.</div>
+  <button id="bell" class="ghost" type="button">🔔 Enable Notifications</button>
+  <div class="tabs"><button id="tFind">Find a prayer</button><button id="tAdd" class="ghost">Add a prayer</button></div>
+
+  <section id="find">
+    <input id="q" type="search" placeholder="Search suburb, postcode or venue" aria-label="Search">
+    <div class="chips" id="states"></div>
+    <div class="row">
+      <select id="when" aria-label="When"><option value="">Any date</option><option value="today">Today</option><option value="upcoming">Upcoming</option><option value="custom">Pick a date…</option></select>
+      <button id="near" class="ghost" type="button">📍 Near me</button>
+    </div>
+    <input id="qd" type="date" style="display:none;margin-top:8px" aria-label="Date">
+    <div class="bar"><span id="count" class="meta"></span><button id="clear" class="ghost" type="button">Reset</button></div>
+    <div id="status" class="meta"></div>
+    <div id="list"></div>
+  </section>
+
+  <section id="form">
+    <label>Venue / mosque / park name *</label><input id="venue" maxlength="80">
+    <label>Street address</label><input id="addr" maxlength="120">
+    <div class="row">
+      <div><label>Suburb *</label><input id="suburb" maxlength="50"></div>
+      <div><label>State *</label><select id="state"><option value="">Select</option><option>NSW</option><option>VIC</option><option>QLD</option><option>ACT</option><option>SA</option><option>NT</option><option>WA</option><option>TAS</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>Postcode</label><input id="post" inputmode="numeric" maxlength="4"></div>
+      <div><label>Organiser contact (optional)</label><input id="contact" maxlength="80" placeholder="Phone or email"></div>
+    </div>
+    <div class="row"><div><label>Date *</label><input id="date" type="date"></div><div><label>Time *</label><input id="time" type="time"></div></div>
+    <label>Notes (sisters' section, parking, language of khutbah…)</label><textarea id="notes" rows="2" maxlength="200"></textarea>
+    <p></p><button id="loc" class="ghost" type="button">📍 Use my current location for distance sorting</button>
+    <div id="locs" class="meta"></div>
+    <p></p><button id="save" type="button">Submit prayer</button>
+    <div id="msg" class="note" style="display:none"></div>
+  </section>
+</main>
+
+
+<dialog id="edlg">
+  <h3 id="etitle" style="margin:0 0 6px">Update prayer</h3>
+  <p class="meta">Know the right time? Update it so others see the correct details. Please only change it if you’re sure (ideally from the organiser).</p>
+  <div class="row"><div><label>Date</label><input id="edate" type="date"></div><div><label>Time</label><input id="etime" type="time"></div></div>
+  <label>Notes</label><textarea id="enotes" rows="2" maxlength="200"></textarea>
+  <div class="row" style="margin-top:10px"><button id="esave" type="button">Save update</button><button id="ex" class="ghost" type="button">Cancel</button></div>
+  <div id="emsg" class="meta" style="margin-top:8px"></div>
+</dialog>
+
+<script type="module">
+import {firebaseConfig,VAPID_KEY} from "./firebase-config.js";
+const $=id=>document.getElementById(id);
+const FB="https://www.gstatic.com/firebasejs/10.12.2/";
+const STATES=["NSW","VIC","QLD","ACT","SA","NT","WA","TAS"];
+const LS="eid_local_v3",CACHE="eid_cache_v1";
+let items=[],shared=[],me=null,coords=null,st="",onlyStar=false,stars=[],confirmed=[],fs=null,F=null,app=null,swReg=null;
+const configured=!String(firebaseConfig.apiKey).startsWith("YOUR");
+
+const pk=i=>[i.venue,i.suburb,i.state].join("|").toLowerCase().replace(/[^a-z0-9|]+/g,"-");
+const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"};
+const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
+const lj=(k)=>{try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return[]}};
+const sj=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const dt=i=>{const d=new Date(i.date+"T"+(i.time||"00:00"));return isNaN(d)?null:d};
+const dayLabel=s=>{const d=new Date(s+"T00:00");if(isNaN(d))return s||"Date TBC";const l=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});return s===iso(new Date())?"Today · "+l:l};
+const tm=i=>{const d=dt(i);return d?d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}):(i.time||"")};
+const km=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r*Math.cos((a+c)/2*r);return 6371*Math.sqrt(x*x+y*y)};
+const addrStr=i=>[i.venue,i.address,i.suburb,i.state,i.postcode,"Australia"].filter(Boolean).join(" ");
+
+function render(){
+  const q=$("q").value.trim().toLowerCase(),w=$("when").value,qd=$("qd").value,today=iso(new Date());
+  const res=items.filter(i=>{
+    if(i.hidden)return false;
+    if(st&&i.state!==st)return false;
+    if(onlyStar&&!stars.includes(pk(i)))return false;
+    if(w==="today"&&i.date!==today)return false;
+    if(w==="upcoming"&&(i.date||"")<today)return false;
+    if(w==="custom"&&qd&&i.date!==qd)return false;
+    return !q||(i.postcode||"").indexOf(q)===0||(i.suburb||"").toLowerCase().includes(q)||(i.venue||"").toLowerCase().includes(q);
+  });
+  if(me)res.forEach(i=>{i._d=typeof i.lat==="number"?km(me.lat,me.lng,i.lat,i.lng):null});
+  res.sort((a,b)=>{if(me){const x=a._d==null?1e9:a._d,y=b._d==null?1e9:b._d;if(x!==y)return x-y}return((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||""))});
+  $("count").textContent=res.length+(res.length===1?" prayer":" prayers")+(me?" · nearest first":"");
+  let html="",last=null;
+  res.forEach(i=>{
+    if(!me&&i.date!==last){html+='<div class="day">'+esc(dayLabel(i.date))+'</div>';last=i.date}
+    const fav=stars.includes(pk(i)),conf=confirmed.includes(i.id+'|'+i.date+i.time);
+    const dest=typeof i.lat==="number"?i.lat+","+i.lng:encodeURIComponent(addrStr(i));
+    html+='<div class="card"><h3>'+esc(i.venue)+(i._d!=null?'<span class="badge">'+i._d.toFixed(1)+' km</span>':'')+(i.state?'<span class="badge">'+esc(i.state)+'</span>':'')+'</h3>'+
+      '<span class="when">'+(me?esc(dayLabel(i.date))+' · ':'')+esc(tm(i))+'</span>'+
+      '<div class="meta">'+esc([i.address,i.suburb,i.postcode].filter(Boolean).join(", "))+'</div>'+
+      (i.notes?'<div class="meta">'+esc(i.notes)+'</div>':'')+(i.contact?'<div class="meta">Contact: '+esc(i.contact)+'</div>':'')+
+      (i.updatedAt?'<div class="trust">Updated '+ago(i.updatedAt)+' by community'+((i.confirms||0)>0?' · ✓ '+i.confirms+' confirmed':'')+'</div>':((i.confirms||0)>0?'<div class="trust">✓ '+i.confirms+' confirmed</div>':''))+
+      '<div class="acts"><a href="https://www.google.com/maps/dir/?api=1&destination='+dest+'" target="_blank" rel="noopener">🧭 Directions</a><button type="button" data-share="'+esc(i.id||"")+'">Share</button><button type="button" class="fav'+(fav?' on':'')+'" data-fav="'+esc(pk(i))+'" aria-label="Favorite" aria-pressed="'+fav+'">'+(fav?'♥':'♡')+'</button></div>'+
+      '<div class="acts2"><button type="button" data-edit="'+esc(i.id||"")+'">✏️ Update time</button><button type="button" data-confirm="'+esc(i.id||"")+'"'+(conf?' disabled':'')+'>'+(conf?'✓ Thanks!':'✓ Time is correct')+'</button></div></div>';
+  });
+  $("list").innerHTML=html||'<div class="card meta">No prayers match yet. Try another state or date, or add one for your community.</div>';
+}
+stars=lj("eid_stars");confirmed=lj("eid_conf");
+const merge=()=>{items=shared.concat(lj(LS));render()};
+
+const tab=add=>{$("find").style.display=add?"none":"block";$("form").style.display=add?"block":"none";$("tAdd").className=add?"":"ghost";$("tFind").className=add?"ghost":""};
+$("tFind").onclick=()=>tab(false);$("tAdd").onclick=()=>tab(true);
+$("states").innerHTML=["All","STAR",...STATES].map(s=>'<button type="button" class="chip'+(s==="All"?' on':'')+'" data-s="'+s+'">'+(s==="STAR"?"♥":s)+'</button>').join("");
+$("states").onclick=e=>{const s=e.target.dataset.s;if(!s)return;onlyStar=s==="STAR";st=(s==="All"||s==="STAR")?"":s;[...$("states").children].forEach(c=>c.className="chip"+(c.dataset.s===s?" on":""));render()};
+$("q").oninput=render;$("qd").oninput=render;
+$("when").onchange=function(){$("qd").style.display=this.value==="custom"?"block":"none";render()};
+$("clear").onclick=()=>{$("q").value="";$("qd").value="";$("when").value="";$("qd").style.display="none";st="";onlyStar=false;me=null;$("status").textContent="";[...$("states").children].forEach(c=>c.className="chip"+(c.dataset.s==="All"?" on":""));render()};
+
+function geo(ok,fail){if(!navigator.geolocation)return fail();navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lng:p.coords.longitude}),fail,{timeout:10000})}
+$("near").onclick=()=>{$("status").textContent="Finding your location…";geo(c=>{me=c;$("status").textContent="Sorted by distance. Prayers without a map pin are listed last.";render()},()=>{$("status").textContent="Couldn’t get your location. Search by suburb or postcode instead."})};
+$("loc").onclick=()=>{$("locs").textContent="Getting location…";geo(c=>{coords=c;$("locs").textContent="Pin set ✓ (only use this when you are at the venue)"},()=>{$("locs").textContent="Couldn’t get location. You can still submit without a pin."})};
+
+$("list").onclick=async e=>{
+  const ds=e.target.dataset||{},k=ds.fav;
+  if(k){const on=!stars.includes(k);stars=on?stars.concat(k):stars.filter(x=>x!==k);sj("eid_stars",stars);render();syncSub();
+    $("status").textContent=on&&!localStorage.getItem("eid_token")?"Tap Enable Notifications at the top to get alerts for your favorites.":"";return}
+  if(ds.edit!=null){const i=items.find(x=>(x.id||"")===ds.edit);if(!i)return;editing=i;$("etitle").textContent="Update: "+i.venue;$("edate").value=i.date||"";$("etime").value=i.time||"";$("enotes").value=i.notes||"";$("emsg").textContent="";$("edlg").showModal();return}
+  if(ds.confirm!=null){const i=items.find(x=>(x.id||"")===ds.confirm);if(!i)return;
+    try{await patch(i,{confirms:(i.confirms||0)+1,lastConfirmed:Date.now()},{confirms:true,lastConfirmed:true});confirmed.push(i.id+"|"+i.date+i.time);sj("eid_conf",confirmed);render()}catch(x){$("status").textContent="Couldn’t confirm. Please try again."}return}
+  const id=ds.share;if(id==null)return;
+  const i=items.find(x=>(x.id||"")===id);if(!i)return;
+  const txt="Eid prayer: "+i.venue+"\n"+dayLabel(i.date)+" at "+tm(i)+"\n"+[i.address,i.suburb,i.state,i.postcode].filter(Boolean).join(", ");
+  if(navigator.share)navigator.share({title:"Eid prayer",text:txt}).catch(()=>{});
+  else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>{e.target.textContent="Copied ✓"});
+};
+
+$("save").onclick=async()=>{
+  const v={venue:$("venue").value.trim(),address:$("addr").value.trim(),suburb:$("suburb").value.trim(),state:$("state").value,postcode:$("post").value.trim(),contact:$("contact").value.trim(),date:$("date").value,time:$("time").value,notes:$("notes").value.trim(),created:Date.now()};
+  if(coords){v.lat=coords.lat;v.lng=coords.lng}
+  const m=$("msg");m.style.display="block";
+  if(!v.venue||!v.suburb||!v.state||!v.date||!v.time){m.textContent="Please fill in venue, suburb, state, date and time.";return}
+  try{
+    if(fs){await F.addDoc(F.collection(fs,"prayers"),v);m.textContent="Submitted. Thank you! It will appear shortly."}
+    else{const a=lj(LS);v.id="l"+Date.now();a.push(v);sj(LS,a);merge();m.textContent="Saved on this device only (demo mode)."}
+    ["venue","addr","suburb","post","contact","notes"].forEach(k=>$(k).value="");$("state").value="";coords=null;$("locs").textContent="";
+  }catch(e){m.textContent="Could not submit. Check your connection and try again."}
+};
+
+// ---- Community edits ----
+let editing=null;
+async function patch(i,data,inc){
+  if(fs&&!String(i.id).startsWith("l")){
+    const d={...data};if(inc&&inc.confirms)d.confirms=F.increment(1);
+    await F.updateDoc(F.doc(fs,"prayers",i.id),d);
+  }else{const a=lj(LS);const t=a.find(x=>x.id===i.id);if(t)Object.assign(t,data);sj(LS,a);merge()}
+}
+$("ex").onclick=()=>$("edlg").close();
+$("esave").onclick=async()=>{
+  const date=$("edate").value,time=$("etime").value,notes=$("enotes").value.trim();
+  if(!date||!time){$("emsg").textContent="Please enter a date and time.";return}
+  try{await patch(editing,{date,time,notes,updatedAt:Date.now(),confirms:0});$("edlg").close();$("status").textContent="Thanks! The update is live and favorites subscribers have been alerted."}
+  catch(e){$("emsg").textContent="Couldn’t save the update. Please try again."}
+};
+
+// ---- Notifications ----
+const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const note=t=>{$("status").textContent=t};
+const setBell=on=>{$("bell").className=on?"on":"ghost";$("bell").textContent=on?"🔔 Enable Notifications ✓":"🔔 Enable Notifications"};
+async function syncSub(){
+  const t=localStorage.getItem("eid_token");if(!t||!fs)return;
+  try{await F.setDoc(F.doc(fs,"subscribers",t),{places:stars,created:Date.now()},{merge:true})}catch(e){}
+}
+$("bell").onclick=async()=>{
+  try{
+    const t=localStorage.getItem("eid_token");
+    if(t){if(fs)try{await F.deleteDoc(F.doc(fs,"subscribers",t))}catch(e){}
+      localStorage.removeItem("eid_token");setBell(false);note("Notifications turned off.");return}
+    if(ios&&!standalone){note("On iPhone: tap Share → Add to Home Screen, open the app from your home screen, then tap Enable Notifications.");return}
+    if(!("Notification" in window)||!("serviceWorker" in navigator)){note("This browser doesn’t support notifications.");return}
+    if(!configured){note("Notifications need Firebase set up (see README.md).");return}
+    swReg=swReg||await navigator.serviceWorker.ready;
+    if(await Notification.requestPermission()!=="granted"){note("Notifications are blocked. Allow them in your browser or phone settings.");return}
+    const M=await import(FB+"firebase-messaging.js");
+    const token=await M.getToken(M.getMessaging(app),{vapidKey:VAPID_KEY,serviceWorkerRegistration:swReg});
+    if(!token)throw new Error("no token returned");
+    await F.setDoc(F.doc(fs,"subscribers",token),{places:stars,created:Date.now()},{merge:true});
+    localStorage.setItem("eid_token",token);setBell(true);note("");
+  }catch(e){note("Couldn’t enable notifications: "+(e.message||"please try again"))}
+};
+try{if(localStorage.getItem("eid_token")&&"Notification" in window&&Notification.permission==="granted")setBell(true)}catch(e){}
+
+// ---- Boot ----
+shared=lj(CACHE);merge();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").then(r=>{swReg=r}).catch(()=>{});
+if(configured){
+  try{
+    const A=await import(FB+"firebase-app.js");F=await import(FB+"firebase-firestore.js");
+    app=A.initializeApp(firebaseConfig);fs=F.getFirestore(app);
+    syncSub();
+    const sigs={};let seen=false;
+    const sig=d=>d.date+"|"+d.time+"|"+d.address;
+    const localAlert=(d,type)=>{
+      if(!stars.includes(pk(d))||!swReg||!("Notification" in window)||Notification.permission!=="granted"||!localStorage.getItem("eid_token"))return;
+      swReg.showNotification("Notification from my favorite places",{body:(type==="added"?"New prayer: ":"Time updated: ")+d.venue+" · "+d.date+" "+d.time,icon:"icons/icon-192.png",tag:pk(d)+"|"+d.date+d.time,data:{url:"./"}});
+    };
+    F.onSnapshot(F.collection(fs,"prayers"),snap=>{
+      shared=snap.docs.map(d=>({...d.data(),id:d.id}));sj(CACHE,shared);merge();
+      if(seen){snap.docChanges().forEach(c=>{
+        const d={...c.doc.data(),id:c.doc.id},g=sig(d);
+        if(!c.doc.metadata.hasPendingWrites&&((c.type==="added"&&!(d.id in sigs))||(c.type==="modified"&&sigs[d.id]!==g)))localAlert(d,c.type);
+        sigs[d.id]=g})}
+      else snap.docs.forEach(x=>{sigs[x.id]=sig(x.data())});
+      seen=true;
+    },()=>{});
+  }catch(e){fs=null;$("demo").style.display="block"}
+}else $("demo").style.display="block";
+</script>
+</body>
+</html>
